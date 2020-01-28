@@ -85,7 +85,7 @@ class SerialProgrammer:
         self.sock = serial.Serial(port, baud_rate, timeout=1)
         self._debug('Serial connection opened successfully')
 
-        time.sleep(2)  # Wait for the Arduino bootloader
+        #time.sleep(2)  # Wait for the Arduino bootloader
 
     def _debug(self, message, level=DEBUG_NORMAL):
         if self.debug >= level:
@@ -326,7 +326,7 @@ class SerialProgrammer:
 
         # Write page
         self._sendCommand('%s%08x' % (COMMAND_FLASH_WRITE, page))
-        time.sleep(.2)  # Sleep 200 ms
+        #time.sleep(.2)  # Sleep 200 ms
 
         if not self._waitForMessage(COMMAND_FLASH_WRITE):
             self._debug('Invalid / no response for FLASH_WRITE command')

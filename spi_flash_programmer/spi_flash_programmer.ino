@@ -102,7 +102,7 @@ uint32_t uspi_init()
   digitalWrite(LFE5U_SPIFLASH_CS,HIGH);
 
   pinMode(PROGRAMN_PIN,OUTPUT);
-  digitalWrite(PROGRAMN_PIN,LOW);
+  digitalWrite(PROGRAMN_PIN,HIGH);
 
   pinMode(LED_BUSY_PIN,OUTPUT);
   digitalWrite(LED_BUSY_PIN,LOW);
@@ -349,12 +349,13 @@ void write_page(uint32_t address)
   digitalWrite(nCsIo, LOW);
   impl_enable_write();
   digitalWrite(nCsIo, HIGH);
-  delay(10);
+  //delay(10);
+  delayMicroseconds(1);
 
   digitalWrite(nCsIo, LOW);
   impl_write_page(address);
   digitalWrite(nCsIo, HIGH);
-  delay(1); // Wait for 1 ms
+  //delay(1); // Wait for 1 ms
 
   impl_wait_for_write_enable();
 }
