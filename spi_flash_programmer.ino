@@ -73,10 +73,14 @@ uint8_t nCsIo;
 
 void setup()
 {
-  nCsIo = SS;
+  nCsIo = 46; //SS;
+
+#define PROGRAMN_PIN 41
+  pinMode(PROGRAMN_PIN,OUTPUT);
+  digitalWrite(PROGRAMN_PIN,HIGH);
 
   // Use maximum speed with F_CPU / 2
-  SPISettings settingsA(F_CPU / 2, MSBFIRST, SPI_MODE0);
+  //SPISettings settingsA(F_CPU / 2, MSBFIRST, SPI_MODE0);
   uint16_t i;
 
   for (i = 0; i < PAGE_SIZE; i += 4)
@@ -87,14 +91,14 @@ void setup()
     buffer[i + 3] = 0xEF;
   }
 
-  Serial.begin(115200);
+  SerialUSB.begin(115200);
 
   SPI.begin(); // Initialize pins
-  SPI.beginTransaction(settingsA);
+  //SPI.beginTransaction(settingsA);
   pinMode(nCsIo, OUTPUT);
   digitalWrite(nCsIo, HIGH); // disable flash device
 
-  delay(10);
+  //delay(10);
 }
 
 void loop()
@@ -104,104 +108,106 @@ void loop()
   uint16_t tmp16;
 
   // Wait for command
-  while(Serial.available() == 0) {
-    ; // Do nothing
-  }
+  //while(SerialUSB.available() == 0) {
+  //  ; // Do nothing
+  //}
 
-  int cmd = Serial.read();
+  if( ! SerialUSB.available() ) return;
+
+  int cmd = SerialUSB.read();
   switch(cmd) {
   case COMMAND_HELLO:
-    Serial.print(COMMAND_HELLO); // Echo OK
-    Serial.println(VERSION);
-    Serial.print(COMMAND_HELLO); // Echo 2nd OK
+    SerialUSB.print(COMMAND_HELLO); // Echo OK
+    SerialUSB.println(VERSION);
+    SerialUSB.print(COMMAND_HELLO); // Echo 2nd OK
     break;
 
   case COMMAND_FLASH_ERASE_ALL:
     erase_all();
-    Serial.print(COMMAND_FLASH_ERASE_ALL); // Echo OK
+    SerialUSB.print(COMMAND_FLASH_ERASE_ALL); // Echo OK
     break;
 
   case COMMAND_FLASH_ERASE_SECTOR:
     if (!read_hex_u32(&address)) {
-      Serial.print(COMMAND_ERROR); // Echo Error
+      SerialUSB.print(COMMAND_ERROR); // Echo Error
       break;
     }
 
     erase_sector(address);
-    Serial.print(COMMAND_FLASH_ERASE_SECTOR); // Echo OK
+    SerialUSB.print(COMMAND_FLASH_ERASE_SECTOR); // Echo OK
     break;
 
   case COMMAND_FLASH_READ:
     if (!read_hex_u32(&address)) {
-      Serial.print(COMMAND_ERROR); // Echo Error
+      SerialUSB.print(COMMAND_ERROR); // Echo Error
       break;
     }
 
     read_page(address);
-    Serial.print(COMMAND_FLASH_READ); // Echo OK
+    SerialUSB.print(COMMAND_FLASH_READ); // Echo OK
     dump_buffer_crc();
     break;
 
   case COMMAND_FLASH_WRITE:
     if (!read_hex_u32(&address)) {
-      Serial.print(COMMAND_ERROR); // Echo Error
+      SerialUSB.print(COMMAND_ERROR); // Echo Error
       break;
     }
 
     write_page(address);
-    Serial.print(COMMAND_FLASH_WRITE); // Echo OK
+    SerialUSB.print(COMMAND_FLASH_WRITE); // Echo OK
     break;
 
   case COMMAND_BUFFER_LOAD:
-    Serial.print(COMMAND_BUFFER_LOAD); // Echo OK
+    SerialUSB.print(COMMAND_BUFFER_LOAD); // Echo OK
     dump_buffer();
-    Serial.println();
+    SerialUSB.println();
     break;
 
   case COMMAND_BUFFER_CRC:
-    Serial.print(COMMAND_BUFFER_CRC); // Echo OK
+    SerialUSB.print(COMMAND_BUFFER_CRC); // Echo OK
     dump_buffer_crc();
-    Serial.println();
+    SerialUSB.println();
     break;
 
   case COMMAND_BUFFER_STORE:
     if (!read_into_buffer()) {
-      Serial.print(COMMAND_ERROR); // Echo Error
+      SerialUSB.print(COMMAND_ERROR); // Echo Error
       break;
     }
 
-    Serial.print(COMMAND_BUFFER_STORE); // Echo OK
+    SerialUSB.print(COMMAND_BUFFER_STORE); // Echo OK
     dump_buffer_crc();
     break;
 
   case COMMAND_WRITE_PROTECTION_CHECK:
-    Serial.print(COMMAND_WRITE_PROTECTION_CHECK); // Echo OK
+    SerialUSB.print(COMMAND_WRITE_PROTECTION_CHECK); // Echo OK
     impl_write_protection_check();
     break;
 
   case COMMAND_WRITE_PROTECTION_ENABLE:
-    Serial.print(COMMAND_WRITE_PROTECTION_ENABLE); // Echo OK
+    SerialUSB.print(COMMAND_WRITE_PROTECTION_ENABLE); // Echo OK
     impl_write_protection_enable();
     break;
 
   case COMMAND_WRITE_PROTECTION_DISABLE:
-    Serial.print(COMMAND_WRITE_PROTECTION_DISABLE); // Echo OK
+    SerialUSB.print(COMMAND_WRITE_PROTECTION_DISABLE); // Echo OK
     impl_write_protection_disable();
     break;
 
   case COMMAND_STATUS_REGISTER_READ:
-    Serial.print(COMMAND_STATUS_REGISTER_READ); // Echo OK
+    SerialUSB.print(COMMAND_STATUS_REGISTER_READ); // Echo OK
     impl_status_register_read();
     break;
 
   case COMMAND_ID_REGISTER_READ:
-    Serial.print(COMMAND_ID_REGISTER_READ); // Echo OK
+    SerialUSB.print(COMMAND_ID_REGISTER_READ); // Echo OK
     impl_jedec_id_read();
     break;
 
   case COMMAND_SET_CS:
     if(!read_hex_u8(&tmp8)) {
-      Serial.print(COMMAND_ERROR); // Echo Error
+      SerialUSB.print(COMMAND_ERROR); // Echo Error
       break;
     }
     if (tmp8 != nCsIo) {
@@ -212,12 +218,12 @@ void loop()
       digitalWrite(nCsIo, HIGH); // disable flash device
     }
 
-    Serial.print(COMMAND_SET_CS); // Echo OK
+    SerialUSB.print(COMMAND_SET_CS); // Echo OK
     break;
 
   case COMMAND_SET_OUTPUT:
     if(!read_hex_u16(&tmp16)) {
-      Serial.print(COMMAND_ERROR); // Echo Error
+      SerialUSB.print(COMMAND_ERROR); // Echo Error
       break;
     }
     pinMode(tmp16>>8, OUTPUT);
@@ -230,37 +236,37 @@ void loop()
       }
     }
 
-    Serial.print(COMMAND_SET_OUTPUT); // Echo OK
+    SerialUSB.print(COMMAND_SET_OUTPUT); // Echo OK
     break;
 
   case COMMAND_HELP:
-    Serial.println(VERSION);
-    Serial.println("  n         : erase chip");
-    Serial.println("  kXXXXXXXX : erase 4k sector XXXXXXXX (hex)");
-    Serial.println();
-    Serial.println("  rXXXXXXXX : read a page XXXXXXXX (hex) to buffer");
-    Serial.println("  wXXXXXXXX : write buffer to a page XXXXXXXX (hex)");
-    Serial.println();
-    Serial.println("  p         : enable write protection");
-    Serial.println("  u         : disable write protection");
-    Serial.println("  x         : check write protection");
-    Serial.println("  y         : read status register");
-    Serial.println("  i         : read id register");
-    Serial.println();
-    Serial.println("  h         : print buffer CRC-32");
-    Serial.println("  l         : display the buffer (in hex)");
-    Serial.println("  sBBBBBBBB : load the buffer with a page size of data BBBBBBBB...");
-    Serial.println();
-    Serial.println("  *XX       : set IO XX as CS/SS");
-    Serial.println("  oXXYZ     : set IO XX as output, set value Z if Y!=0");
-    Serial.println();
-    Serial.println("Examples:");
-    Serial.println("  r00003700      read data from page 0x3700 into buffer");
-    Serial.println("  scafe...3737   load the buffer with a page of data, first byte is 0xca ...");
+    SerialUSB.println(VERSION);
+    SerialUSB.println("  n         : erase chip");
+    SerialUSB.println("  kXXXXXXXX : erase 4k sector XXXXXXXX (hex)");
+    SerialUSB.println();
+    SerialUSB.println("  rXXXXXXXX : read a page XXXXXXXX (hex) to buffer");
+    SerialUSB.println("  wXXXXXXXX : write buffer to a page XXXXXXXX (hex)");
+    SerialUSB.println();
+    SerialUSB.println("  p         : enable write protection");
+    SerialUSB.println("  u         : disable write protection");
+    SerialUSB.println("  x         : check write protection");
+    SerialUSB.println("  y         : read status register");
+    SerialUSB.println("  i         : read id register");
+    SerialUSB.println();
+    SerialUSB.println("  h         : print buffer CRC-32");
+    SerialUSB.println("  l         : display the buffer (in hex)");
+    SerialUSB.println("  sBBBBBBBB : load the buffer with a page size of data BBBBBBBB...");
+    SerialUSB.println();
+    SerialUSB.println("  *XX       : set IO XX as CS/SS");
+    SerialUSB.println("  oXXYZ     : set IO XX as output, set value Z if Y!=0");
+    SerialUSB.println();
+    SerialUSB.println("Examples:");
+    SerialUSB.println("  r00003700      read data from page 0x3700 into buffer");
+    SerialUSB.println("  scafe...3737   load the buffer with a page of data, first byte is 0xca ...");
     break;
   }
 
-  Serial.flush();
+  SerialUSB.flush();
 } 
 
 void read_page(uint32_t address)
@@ -278,12 +284,13 @@ void write_page(uint32_t address)
   digitalWrite(nCsIo, LOW);
   impl_enable_write();
   digitalWrite(nCsIo, HIGH);
-  delay(10);
+  //delay(10);
+  delayMicroseconds(1);
 
   digitalWrite(nCsIo, LOW);
   impl_write_page(address);
   digitalWrite(nCsIo, HIGH);
-  delay(1); // Wait for 1 ms
+  //delay(1); // Wait for 1 ms
 
   impl_wait_for_write_enable();
 }
@@ -354,7 +361,7 @@ int8_t read_nibble(void)
   int16_t c;
 
   do {
-    c = Serial.read();
+    c = SerialUSB.read();
   } while(c == -1);
 
   if (c >= '0' && c <= '9') {
@@ -431,9 +438,9 @@ int8_t read_hex_u32(uint32_t *value)
 void write_nibble(uint8_t value)
 {
   if (value < 10) {
-    Serial.write(value + '0' - 0);
+    SerialUSB.write(value + '0' - 0);
   } else {
-    Serial.write(value + 'A' - 10);
+    SerialUSB.write(value + 'A' - 10);
   }
 }
 
@@ -762,4 +769,3 @@ void impl_jedec_id_read(void)
   write_hex_u8(SPI.transfer(0x0));
   digitalWrite(nCsIo, HIGH);
 }
-
