@@ -1,3 +1,187 @@
+//Archimajor Schematic Pinmap
+#define  DIAG1 37
+#define DIAG2 92
+#define DIAG3 48
+#define DIAG4 44
+#define DIAG5 104
+#define DIAG6 78
+#define DIAG7 19
+#define DIAG8 18
+#define DIR1  38
+#define DIR2  51
+#define DIR3  47
+#define DIR4  36
+#define DIR5  105
+#define DIR6  97
+#define DIR7  99
+#define DIR8  26
+#define DRV_EN  41
+#define Fan1  4
+#define Fan2  5
+#define Fan3  66
+#define Fan4  67
+#define Heat1 9
+#define Heat2 8
+#define Heat3 6
+#define HeatBed 7
+#define M_nCS1  59
+#define M_nCS2  49
+#define M_nCS3  45
+#define M_nCS4  107
+#define M_nCS5  101
+#define M_nCS6  102
+#define M_nCS7  25
+#define M_nCS8  27
+#define MAX_ES1 32
+#define MAX_ES2 15
+#define MAX_ES3 30
+#define MAX_ES4 98
+#define MIN_ES1 14
+#define MIN_ES2 29
+#define MIN_ES3 31
+#define MIN_ES4 53
+#define STEP1 39
+#define STEP2 50
+#define STEP3 46
+#define STEP4 96
+#define STEP5 103
+#define STEP6 22
+#define STEP7 100
+#define STEP8 28
+#define TACH_1  3
+#define TACH_2  12
+#define TACH_3  11
+#define TACH_4  10
+#define TC_nCS1 106
+#define TC_nCS2 108
+#define TC_nCS3 58
+#define TC_nCS4 61
+#define TC_nCS5 62
+#define THERM_AN1 64
+#define THERM_AN2 63
+#define THERM_AN3 65
+#define SPIFLASH_CS 52
+
+#define R_SENSE 0.075
+
+#include <TMCStepper.h>
+TMC5160Stepper driver1 = TMC5160Stepper(M_nCS1, R_SENSE);
+TMC5160Stepper driver2 = TMC5160Stepper(M_nCS2, R_SENSE);
+TMC5160Stepper driver3 = TMC5160Stepper(M_nCS3, R_SENSE);
+TMC5160Stepper driver4 = TMC5160Stepper(M_nCS4, R_SENSE);
+TMC5160Stepper driver5 = TMC5160Stepper(M_nCS5, R_SENSE);
+TMC5160Stepper driver6 = TMC5160Stepper(M_nCS6, R_SENSE);
+TMC5160Stepper driver7 = TMC5160Stepper(M_nCS7, R_SENSE);
+TMC5160Stepper driver8 = TMC5160Stepper(M_nCS8, R_SENSE);
+
+void setup_archimajor() {
+  pinMode(DIR1,OUTPUT);
+  pinMode(DIR2,OUTPUT);
+  pinMode(DIR3,OUTPUT);
+  pinMode(DIR4,OUTPUT);
+  pinMode(DIR5,OUTPUT);
+  pinMode(DIR6,OUTPUT);
+  pinMode(DIR7,OUTPUT);
+  pinMode(DIR8,OUTPUT);
+
+  pinMode(STEP1,OUTPUT);
+  pinMode(STEP2,OUTPUT);
+  pinMode(STEP3,OUTPUT);
+  pinMode(STEP4,OUTPUT);
+  pinMode(STEP5,OUTPUT);
+  pinMode(STEP6,OUTPUT);
+  pinMode(STEP7,OUTPUT);
+  pinMode(STEP8,OUTPUT);
+  
+  pinMode(TC_nCS1,OUTPUT);
+  pinMode(TC_nCS2,OUTPUT);
+  pinMode(TC_nCS3,OUTPUT);
+  pinMode(TC_nCS4,OUTPUT);
+  pinMode(TC_nCS5,OUTPUT);
+  pinMode(SPIFLASH_CS,OUTPUT);
+
+  digitalWrite(TC_nCS1,HIGH);
+  digitalWrite(TC_nCS2,HIGH);
+  digitalWrite(TC_nCS3,HIGH);
+  digitalWrite(TC_nCS4,HIGH);
+  digitalWrite(TC_nCS5,HIGH);
+  digitalWrite(SPIFLASH_CS,HIGH);
+
+  pinMode(M_nCS1,OUTPUT);
+  pinMode(M_nCS2,OUTPUT);
+  pinMode(M_nCS3,OUTPUT);
+  pinMode(M_nCS4,OUTPUT);
+  pinMode(M_nCS5,OUTPUT);
+  pinMode(M_nCS6,OUTPUT);
+  pinMode(M_nCS7,OUTPUT);
+  pinMode(M_nCS8,OUTPUT);
+
+  digitalWrite(M_nCS1,HIGH);
+  digitalWrite(M_nCS2,HIGH);
+  digitalWrite(M_nCS3,HIGH);
+  digitalWrite(M_nCS4,HIGH);
+  digitalWrite(M_nCS5,HIGH);
+  digitalWrite(M_nCS6,HIGH);
+  digitalWrite(M_nCS7,HIGH);
+  digitalWrite(M_nCS8,HIGH);
+
+  pinMode(SPIFLASH_CS,OUTPUT);
+  digitalWrite(SPIFLASH_CS,HIGH);
+
+  setup_tmc5160();
+}
+
+void setup_driver(TMC5160Stepper& driver) {
+    int8_t timings[] = {4, -2, 1}; // Default 4, -2, 1
+    driver.begin();
+
+    //stealthChop Configuration flowchart pg110
+    CHOPCONF_t chopconf{0};
+    chopconf.tbl = 2;
+    chopconf.toff = 15; //timings[0];
+    chopconf.intpol = 0; //1;
+    chopconf.hend = 0; //1; //15; //timings[1] + 3;
+    chopconf.hstrt = 4; //4; //7; //timings[2] - 1;
+    chopconf.tpfd = 0; //5; //15
+    driver.CHOPCONF(chopconf.sr);
+    
+    driver.microsteps(16);
+    //driver.en_pwm_mode(1);
+
+    //Motor Current
+    //driver.IHOLD_IRUN(0x61F1F);
+    //driver.GLOBAL_SCALER(129);
+    //driver.rms_current(3500); //, 0.5); //3500
+    driver.rms_current(800);
+
+    driver.bbmtime(0);
+    driver.bbmclks(0);
+    
+    delay(100);
+
+    driver.drvstrength(0);
+
+    driver.pwm_freq(0);
+    #define STEP_PULSE_DELAY_US 400 //80
+}
+
+void setup_tmc5160()
+{
+  SPI.begin();
+
+  setup_driver(driver1);
+  setup_driver(driver2);
+  setup_driver(driver3);
+  setup_driver(driver4);
+  setup_driver(driver5);
+  setup_driver(driver6);
+  setup_driver(driver7);
+  setup_driver(driver8);
+
+  delay(100);
+  digitalWrite(DRV_EN, LOW);
+}
+
 #include <stdint.h>
 #include <stdio.h>
 
@@ -78,7 +262,7 @@ uint8_t nCsIo;
 void USART1config() {
   USART1->US_WPMR = 0x55534100;   // Unlock the USART Mode register
   USART1->US_MR |= 0x408CE | 0x100;       // Set Mode to CLK0=1, 8_BIT, SPI_MASTER
-  USART1->US_BRGR = 21;           // Clock Divider (SCK = 4MHz)
+  USART1->US_BRGR = 84;           // Clock Divider (SCK = 4MHz)
 
   PIOA->PIO_WPMR = 0x50494F00;    // Unlock PIOA Write Protect Mode Register
   PIOB->PIO_WPMR = 0x50494F00;    // Unlock PIOB Write Protect Mode Register
@@ -92,23 +276,94 @@ void USART1config() {
   PIOA->PIO_PDR |= (1u << 12);    // MISO: Disable PIO control, enable peripheral control
 }
 
+void USART1status() {
+  SerialUSB.print("PIOA_ABSR \t");
+  SerialUSB.println(PIOA->PIO_ABSR, HEX);
+  SerialUSB.print("PIOB_ABSR \t");
+  SerialUSB.println(PIOB->PIO_ABSR, HEX);
+  SerialUSB.print("US_MR   \t");
+  SerialUSB.println(USART1->US_MR, HEX);
+  SerialUSB.print("US_CSR  \t");
+  SerialUSB.println(USART1->US_CSR, HEX);
+  SerialUSB.print("US_BRGR (DEC)\t");
+  SerialUSB.println(USART1->US_BRGR, DEC);
+  SerialUSB.print("US_RTOR \t");
+  SerialUSB.println(USART1->US_RTOR, HEX);
+  SerialUSB.print("US_TTGR \t");
+  SerialUSB.println(USART1->US_TTGR, HEX);
+  SerialUSB.print("US_FIDI \t");
+  SerialUSB.println(USART1->US_FIDI, HEX);
+  SerialUSB.print("US_NER  \t");
+  SerialUSB.println(USART1->US_NER, HEX);
+  SerialUSB.print("US_IF   \t");
+  SerialUSB.println(USART1->US_IF, HEX);
+  SerialUSB.print("US_MAN  \t");
+  SerialUSB.println(USART1->US_MAN, HEX);
+  SerialUSB.print("US_LINMR \t");
+  SerialUSB.println(USART1->US_LINMR, HEX);
+  SerialUSB.print("US_LINIR \t");
+  SerialUSB.println(USART1->US_LINIR, HEX);
+  SerialUSB.print("US_WPSR \t");
+  SerialUSB.println(USART1->US_WPSR, HEX);
+}
+
+
+void USART1_Setup() {
+    PIOA->PIO_ABSR |= (0u << 14);   // CS: Assign A14 I/O to the Peripheral A function
+    PIOA->PIO_PDR |= (1u << 14);    // CS: Disable PIO control, enable peripheral control
+    PIOA->PIO_ABSR |= (0u << 16);   // SCK: Assign A16 I/O to the Peripheral A function
+    PIOA->PIO_PDR |= (1u << 16);    // SCK: Disable PIO control, enable peripheral control
+    PIOA->PIO_ABSR |= (0u << 13);   // MOSI: Assign PA13 I/O to the Peripheral A function
+    PIOA->PIO_PDR |= (1u << 13);    // MOSI: Disable PIO control, enable peripheral control
+    PIOA->PIO_ABSR |= (0u << 12);   // MISO: Assign A12 I/O to the Peripheral A function
+    PIOA->PIO_PDR |= (1u << 12);    // MISO: Disable PIO control, enable peripheral control
+
+    pmc_enable_periph_clk(ID_USART1);
+    USART1->US_MR = 0x408CE | 0x100;
+    USART1->US_BRGR = 84;
+    USART1->US_CR = US_CR_RSTRX | US_CR_RSTTX;
+    USART1->US_CR = US_CR_RXEN;
+    USART1->US_CR = US_CR_TXEN;
+    USART1->US_PTCR = US_PTCR_RXTEN;
+    USART1->US_PTCR = US_PTCR_TXTEN;
+}
+
+#define USE_OLD_SPI 0
+
+#if USE_OLD_SPI
+#define uspi_transfer(x) uspi_transferOLD(x)
+#else
+#define uspi_transfer(x) uspi_transferNEW(x)
+#endif
+
 uint32_t uspi_init()
 {
-  Serial2.begin(9600);  // pre-initialize USART1
-  USART1config();       // setup mode, clock and pins
-  //USART1status();
-
+  if(USE_OLD_SPI)
+  {
+    Serial2.begin(9600);  // pre-initialize USART1
+    USART1config();       // setup mode, clock and pins
+    USART1status();
+  } else {
+    USART1_Setup();
+  }
   pinMode(LFE5U_SPIFLASH_CS,OUTPUT);
   digitalWrite(LFE5U_SPIFLASH_CS,HIGH);
 
   pinMode(PROGRAMN_PIN,OUTPUT);
-  digitalWrite(PROGRAMN_PIN,LOW);
+  digitalWrite(PROGRAMN_PIN,HIGH);
 
   pinMode(LED_BUSY_PIN,OUTPUT);
   digitalWrite(LED_BUSY_PIN,LOW);
 }
 
-uint32_t uspi_transfer(uint32_t data)
+uint32_t uspi_transferNEW(uint32_t data){
+  while( !(USART1->US_CSR & US_CSR_TXRDY) );
+  USART1->US_THR = data;
+  while(  !(USART1->US_CSR & US_CSR_RXRDY) );
+  return USART1->US_RHR;
+}
+
+uint32_t uspi_transferOLD(uint32_t data)
 {
     
     USART1->US_THR = data;
@@ -123,7 +378,11 @@ uint32_t uspi_transfer(uint32_t data)
 
 void setup()
 {
-  uspi_init();
+  pinMode(STEP1,OUTPUT);
+  pinMode(DIR1,OUTPUT);
+  digitalWrite(DIR1,HIGH);
+
+  pinMode(16,OUTPUT);
   
   nCsIo = LFE5U_SPIFLASH_CS;
 
@@ -140,6 +399,14 @@ void setup()
   }
 
   SerialUSB.begin(115200);
+  while(! SerialUSB) {
+    digitalWrite(16,HIGH);
+    delayMicroseconds(10);
+    digitalWrite(16,LOW);
+    delayMicroseconds(10);
+  }
+
+  uspi_init();
 
   //SPI.begin(); // Initialize pins
   //SPI.beginTransaction(settingsA);
@@ -149,51 +416,215 @@ void setup()
   delay(10);
 }
 
-void loop()
+void loop2()
 {
   if(SerialUSB.available())
   {
     uint8_t cmd = SerialUSB.read();
     switch(cmd)
     {
-      case '>':
+      case '?':
         SerialUSB.println("hello");
         //write_hex_u8(0xFF);
         //impl_jedec_id_read();
         spiflash_init();
         break;
-      case '?':
-        SerialUSB.println(VERSION);
-        SerialUSB.println("  n         : erase chip");
-        SerialUSB.println("  kXXXXXXXX : erase 4k sector XXXXXXXX (hex)");
-        SerialUSB.println();        delay(1);
-        SerialUSB.println("  rXXXXXXXX : read a page XXXXXXXX (hex) to buffer");
-        SerialUSB.println("  wXXXXXXXX : write buffer to a page XXXXXXXX (hex)");
-        SerialUSB.println();        delay(1);
-        SerialUSB.println("  p         : enable write protection");
-        SerialUSB.println("  u         : disable write protection");
-        SerialUSB.println("  x         : check write protection");
-        SerialUSB.println("  y         : read status register");
-        SerialUSB.println("  i         : read id register");
-        SerialUSB.println();        delay(1);
-        SerialUSB.println("  h         : print buffer CRC-32");
-        SerialUSB.println("  l         : display the buffer (in hex)");
-        SerialUSB.println("  sBBBBBBBB : load the buffer with a page size of data BBBBBBBB...");
-        SerialUSB.println();        delay(1);
-        SerialUSB.println("  *XX       : set IO XX as CS/SS");
-        SerialUSB.println("  oXXYZ     : set IO XX as output, set value Z if Y!=0");
-        SerialUSB.println();        delay(1);
-        SerialUSB.println("Examples:");
-        SerialUSB.println("  r00003700      read data from page 0x3700 into buffer");
-        SerialUSB.println("  scafe...3737   load the buffer with a page of data, first byte is 0xca ...");
-        break;
     }
-  } else {
-    delay(100);
   }
 }
 
-void loop2()
+
+#define USPI_CS_PIN    23 // PA14 23 
+void loop3() {
+  static uint32_t pos_x = 0;
+  static uint32_t tx_packet = 1000000000;
+  
+  static uint32_t last_millis=0;
+
+
+  if( SerialUSB.available() )
+  {
+    int cmd = SerialUSB.read();
+    switch(cmd) {
+      case '?':
+        SerialUSB.println("hello");
+        break;
+      case 's':
+        for( int i = 0; i < 320; i++)
+        {
+          digitalWrite(STEP1,HIGH);
+          delayMicroseconds(2);
+          digitalWrite(STEP1,LOW);
+          delayMicroseconds(2);
+          delay(10);
+          pos_x++;
+        }
+        break;
+    }
+  }
+  
+  if( (millis() - last_millis) > 1000  ) {
+    
+    if(0) for( int i = 0; i < 1000; i++)
+    {
+      digitalWrite(STEP1,HIGH);
+      delayMicroseconds(1);
+      digitalWrite(STEP1,LOW);
+      delayMicroseconds(1);
+      pos_x++;
+    }
+      
+    //uint8_t resp=0;
+    //uint8_t resp2=0;
+    for(uint8_t txData = 1; txData < 4; txData++)
+    {
+      //static uint8_t txData=0; // 157;
+      uint32_t resp;
+      digitalWrite(USPI_CS_PIN, LOW);
+      delayMicroseconds(1);
+      SerialUSB.print("TX: ");
+      SerialUSB.print(txData); 
+
+      SerialUSB.print("  T: ");
+      SerialUSB.print(tx_packet); 
+      SerialUSB.print("  T3: ");
+      SerialUSB.print( uint8_t( (tx_packet >> 24) &0xFF) ); 
+      SerialUSB.print("  T2: ");
+      SerialUSB.print( uint8_t( (tx_packet >> 16) &0xFF) ); 
+      SerialUSB.print("  T1: ");
+      SerialUSB.print( uint8_t( (tx_packet >> 8) &0xFF) ); 
+      SerialUSB.print("  T0: ");
+      SerialUSB.print( uint8_t( (tx_packet) &0xFF) ); 
+
+      SerialUSB.print("  RX: ");
+      uint8_t resp1 = uspi_transfer(txData);
+      SerialUSB.print(resp1);
+  
+      SerialUSB.print("  RX: ");
+      uint8_t resp2 = uspi_transfer( uint8_t( (tx_packet >> 24) &0xFF)  );
+      SerialUSB.print(resp2);
+  
+      SerialUSB.print("  RX: ");
+      uint8_t resp3 = uspi_transfer( uint8_t( (tx_packet >> 16) &0xFF) );
+      SerialUSB.print(resp3);
+  
+      SerialUSB.print("  RX: ");
+      uint8_t resp4 = uspi_transfer( uint8_t( (tx_packet >> 8) &0xFF) );
+      SerialUSB.print(resp4);
+  
+      SerialUSB.print("  RX: ");
+      uint8_t resp5 = uspi_transfer( uint8_t( (tx_packet ) &0xFF) );
+      SerialUSB.print(resp5);
+  /*
+      SerialUSB.print("  RX8-40L: ");   
+      resp = ((uint32_t)resp5 << 24) | ((uint32_t)resp4 << 16)  | ((uint32_t)resp3 << 8)  | ((uint32_t)resp2); 
+      SerialUSB.print(resp);
+  
+      SerialUSB.print("  RX8-40F: ");   
+      resp = ((uint32_t)resp2 << 24) | ((uint32_t)resp3 << 16)  | ((uint32_t)resp4 << 8)  | ((uint32_t)resp5); 
+      SerialUSB.print(resp);
+  
+      SerialUSB.print("  RX32L: ");   
+      resp = ((uint32_t)resp4 << 24) | ((uint32_t)resp3 << 16)  | ((uint32_t)resp2 << 8)  | ((uint32_t)resp1); 
+      SerialUSB.print(resp);
+  */
+      SerialUSB.print("  POS_X: ");
+      SerialUSB.print(pos_x);
+  
+      //Working
+      SerialUSB.print("  RX32F: ");   
+      resp = ((uint32_t)resp1 << 24) | ((uint32_t)resp2 << 16)  | ((uint32_t)resp3 << 8)  | ((uint32_t)resp4); 
+      SerialUSB.println(resp);
+  
+      //resp2 = SPI.transfer(txData+1);
+      delayMicroseconds(1);
+      digitalWrite(USPI_CS_PIN, HIGH);
+  
+  
+      //SerialUSB.print(" 0x");
+      //SerialUSB.println(resp);
+      //SerialUSB.println(resp2);
+      last_millis = millis();
+  
+      //txData++;
+      //if(txData > 4) txData = 0;
+    } //for loop txData
+
+    tx_packet++;
+  } //if millis
+}
+
+void rapchip_cmd(uint8_t cmd, uint32_t tx_packet)
+{
+      uint32_t resp;
+      digitalWrite(USPI_CS_PIN, LOW);
+      delayMicroseconds(1);
+      SerialUSB.print("TX: ");
+      SerialUSB.print(cmd); 
+
+      SerialUSB.print("  T: ");
+      SerialUSB.print(tx_packet); 
+      SerialUSB.print("  T3: ");
+      SerialUSB.print( uint8_t( (tx_packet >> 24) &0xFF) ); 
+      SerialUSB.print("  T2: ");
+      SerialUSB.print( uint8_t( (tx_packet >> 16) &0xFF) ); 
+      SerialUSB.print("  T1: ");
+      SerialUSB.print( uint8_t( (tx_packet >> 8) &0xFF) ); 
+      SerialUSB.print("  T0: ");
+      SerialUSB.print( uint8_t( (tx_packet) &0xFF) ); 
+
+      SerialUSB.print("  RX: ");
+      uint8_t resp1 = uspi_transfer(txData);
+      SerialUSB.print(resp1);
+  
+      SerialUSB.print("  RX: ");
+      uint8_t resp2 = uspi_transfer( uint8_t( (tx_packet >> 24) &0xFF)  );
+      SerialUSB.print(resp2);
+  
+      SerialUSB.print("  RX: ");
+      uint8_t resp3 = uspi_transfer( uint8_t( (tx_packet >> 16) &0xFF) );
+      SerialUSB.print(resp3);
+  
+      SerialUSB.print("  RX: ");
+      uint8_t resp4 = uspi_transfer( uint8_t( (tx_packet >> 8) &0xFF) );
+      SerialUSB.print(resp4);
+  
+      SerialUSB.print("  RX: ");
+      uint8_t resp5 = uspi_transfer( uint8_t( (tx_packet ) &0xFF) );
+      SerialUSB.print(resp5);
+
+      digitalWrite(USPI_CS_PIN, HIGH);
+  /*
+      SerialUSB.print("  RX8-40L: ");   
+      resp = ((uint32_t)resp5 << 24) | ((uint32_t)resp4 << 16)  | ((uint32_t)resp3 << 8)  | ((uint32_t)resp2); 
+      SerialUSB.print(resp);
+  
+      SerialUSB.print("  RX8-40F: ");   
+      resp = ((uint32_t)resp2 << 24) | ((uint32_t)resp3 << 16)  | ((uint32_t)resp4 << 8)  | ((uint32_t)resp5); 
+      SerialUSB.print(resp);
+  
+      SerialUSB.print("  RX32L: ");   
+      resp = ((uint32_t)resp4 << 24) | ((uint32_t)resp3 << 16)  | ((uint32_t)resp2 << 8)  | ((uint32_t)resp1); 
+      SerialUSB.print(resp);
+  */
+      SerialUSB.print("  POS_X: ");
+      SerialUSB.print(pos_x);
+  
+      //Working
+      SerialUSB.print("  RX32F: ");   
+      resp = ((uint32_t)resp1 << 24) | ((uint32_t)resp2 << 16)  | ((uint32_t)resp3 << 8)  | ((uint32_t)resp4); 
+      SerialUSB.println(resp);
+
+
+}
+
+void loop()
+{
+  if(SerialUSB.baud() == 115200) loop_PROGRAM(); else 
+  loop3();
+}
+
+void loop_PROGRAM()
 {
   uint32_t address;
   uint8_t tmp8;
@@ -204,7 +635,7 @@ void loop2()
   //  ; // Do nothing
   //}
 
-  //if( ! SerialUSB.available() ) return;
+  if( ! SerialUSB.available() ) return;
 
   int cmd = SerialUSB.read();
   switch(cmd) {
@@ -358,7 +789,7 @@ void loop2()
     break;
   }
 
-  //SerialUSB.flush();
+  SerialUSB.flush();
 } 
 
 void read_page(uint32_t address)
